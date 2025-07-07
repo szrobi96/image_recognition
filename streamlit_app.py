@@ -1,5 +1,6 @@
+import os
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -52,11 +53,20 @@ class YOLOTransformer(VideoTransformerBase):
                 )
         return img
 
+# ---- STUN and TURN Server Configuration ----
+RTC_CONFIGURATION = RTCConfiguration({
+    "iceServers": [
+        # Public STUN Server
+        {"urls": ["stun:stun.l.google.com:19302"]},
+    ]
+})
+
 # ---- Open Camera and Start Detection ----
 webrtc_streamer(
     key="yolo-detect",
     video_processor_factory=YOLOTransformer,
     media_stream_constraints={"video": True, "audio": False},
+    rtc_configuration=RTC_CONFIGURATION,  # Add STUN and TURN configuration
 )
 
 st.divider()
