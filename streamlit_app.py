@@ -66,7 +66,9 @@ webrtc_streamer(
     key="yolo-detect",
     video_processor_factory=YOLOTransformer,
     media_stream_constraints={"video": True, "audio": False},
-    rtc_configuration=RTC_CONFIGURATION,  # Add STUN and TURN configuration
+    rtc_configuration={
+        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}],  # Add STUN and TURN configuration
+        }
 )
 
 st.divider()
