@@ -34,14 +34,13 @@ min_thresh = args.thresh
 user_res = args.resolution
 record = args.record
 
-# Check if model file exists and is valid
-if (not os.path.exists(model_path)):
-    print('ERROR: Model path is invalid or model was not found. Make sure the model filename was entered correctly.')
+# Try to load the model, let Ultralytics handle downloading or erroring
+try:
+    model = YOLO(model_path, task='detect')
+    labels = model.names
+except Exception as e:
+    print(f'ERROR: Could not load model "{model_path}". Details: {e}')
     sys.exit(0)
-
-# Load the model into memory and get labemap
-model = YOLO(model_path, task='detect')
-labels = model.names
 
 # Parse input to determine if image source is a file, folder, video, or USB camera
 img_ext_list = ['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG','.bmp','.BMP']
@@ -207,6 +206,12 @@ while True:
     
     # Display detection results
     cv2.putText(frame, f'Number of objects: {object_count}', (10,40), cv2.FONT_HERSHEY_SIMPLEX, .7, (0,255,255), 2) # Draw total number of detected objects
+    # Blend in hotkey info at the bottom of the frame
+    hotkey_text = "Press 'q' to quit, 's' to pause, 'p' to save frame, or close window to exit"
+    text_size, _ = cv2.getTextSize(hotkey_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    text_x = 10
+    text_y = frame.shape[0] - 10
+    cv2.putText(frame, hotkey_text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,255), 2)
     cv2.imshow('YOLO detection results',frame) # Display image
     if record: recorder.write(frame)
 
@@ -215,6 +220,10 @@ while True:
         key = cv2.waitKey()
     elif source_type == 'video' or source_type == 'usb' or source_type == 'picamera':
         key = cv2.waitKey(5)
+    
+    # Check if window is closed (X button)
+    if cv2.getWindowProperty('YOLO detection results', cv2.WND_PROP_VISIBLE) < 1:
+        break
     
     if key == ord('q') or key == ord('Q'): # Press 'q' to quit
         break
