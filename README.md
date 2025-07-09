@@ -8,6 +8,14 @@ This repository provides a complete workflow for training, testing, and deployin
 
 ---
 
+## Attribution
+
+The Jupyter notebook and the local inference script (`yolo_detect.py`) were originally written by Evan Juras, [EJ Technology Consultants](https://ejtech.io), and can be found at [EdjeElectronics/Train-and-Deploy-YOLO-Models](https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models).
+
+These scripts have been adapted and extended by Róbert Szabó.
+
+---
+
 ## 1. Training a Custom YOLO Model
 
 Use the notebook `Train_YOLO_Models.ipynb` to:
@@ -83,10 +91,12 @@ Install all requirements:
 ```shell
 pip install ultralytics opencv-python numpy streamlit streamlit-webrtc pyngrok
 ```
+
 or use the provided `requirements.txt`
 ```shell
 pip install -r requirements.txt
 ```
+
 
 ---
 
@@ -101,8 +111,12 @@ pip install -r requirements.txt
 - [Roboflow Universe](https://universe.roboflow.com/)
 - [Streamlit](https://streamlit.io/)
 - [streamlit-webrtc](https://github.com/whitphx/streamlit-webrtc)
+- [EdjeElectronics/Train-and-Deploy-YOLO-Models](https://github.com/EdjeElectronics/Train-and-Deploy-YOLO-Models)
 
 ---
 
 ## License
 MIT License
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request.
