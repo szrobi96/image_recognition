@@ -18,22 +18,43 @@ st.divider()
 # Using the fastest pre-trained YOLOv8 nano model.
 @st.cache_resource
 def load_model():
-    return YOLO('yolov8n.pt')
+    return YOLO('yolo11s.pt')
 model = load_model()
 
 # ---- Video Processing Class ----
 class YOLOTransformer(VideoTransformerBase):
-    def transform(self, frame):
+    def __init__(self):
+        self.frame_count = 0
+        self.skip_n = 2  # Run inference every 2nd frame (adjust for more/less skipping)
+        self.last_result = None
+        self.target_size = (416, 416)  # Resize for faster inference
+
+    def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
-        # YOLO inference
-        results = model(img, verbose=False)
-        boxes = results[0].boxes
-        if boxes is not None:
-            # Draw boxes and labels
-            for box in boxes:
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                conf = float(box.conf[0])
-                cls = int(box.cls[0])
+        orig_h, orig_w = img.shape[:2]
+        self.frame_count += 1
+
+        # Only run inference every skip_n frames
+        if self.frame_count % self.skip_n == 0 or self.last_result is None:
+            # Resize for faster inference
+            resized = cv2.resize(img, self.target_size)
+            results = model(resized, verbose=False)
+            boxes = results[0].boxes
+            self.last_result = []
+            if boxes is not None:
+                for box in boxes:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    # Scale boxes back to original image size
+                    x1 = int(x1 * orig_w / self.target_size[0])
+                    y1 = int(y1 * orig_h / self.target_size[1])
+                    x2 = int(x2 * orig_w / self.target_size[0])
+                    y2 = int(y2 * orig_h / self.target_size[1])
+                    conf = float(box.conf[0])
+                    cls = int(box.cls[0])
+                    self.last_result.append((x1, y1, x2, y2, conf, cls))
+        # Draw last detections
+        if self.last_result:
+            for x1, y1, x2, y2, conf, cls in self.last_result:
                 label = model.model.names[cls] if hasattr(model.model, "names") else str(cls)
                 color = (
                     int(37 * cls) % 255,
@@ -51,24 +72,13 @@ class YOLOTransformer(VideoTransformerBase):
                     2,
                     cv2.LINE_AA,
                 )
-        return img
-
-# ---- STUN and TURN Server Configuration ----
-RTC_CONFIGURATION = RTCConfiguration({
-    "iceServers": [
-        # Public STUN Server
-        {"urls": ["stun:stun.l.google.com:19302"]},
-    ]
-})
+        return frame.from_ndarray(img, format="bgr24")
 
 # ---- Open Camera and Start Detection ----
 webrtc_streamer(
     key="yolo-detect",
     video_processor_factory=YOLOTransformer,
     media_stream_constraints={"video": True, "audio": False},
-    rtc_configuration={
-        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}],  # Add STUN and TURN configuration
-        }
 )
 
 st.divider()
