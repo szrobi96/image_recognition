@@ -14,12 +14,19 @@ st.markdown(
 )
 st.divider()
 
+# ---- Model Selection Dropdown ----
+MODEL_DIR = "."  # Change to your models folder if needed
+pt_files = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pt")]
+if not pt_files:
+    st.error("No .pt files found in the folder!")
+    st.stop()
+selected_model = st.selectbox("Select YOLO model file:", pt_files)
+
 # ---- YOLO Model Loading ----
-# Using the fastest pre-trained YOLOv8 nano model.
 @st.cache_resource
-def load_model():
-    return YOLO('yolo11s.pt')
-model = load_model()
+def load_model(model_path):
+    return YOLO(model_path)
+model = load_model(os.path.join(MODEL_DIR, selected_model))
 
 # ---- Video Processing Class ----
 class YOLOTransformer(VideoTransformerBase):
